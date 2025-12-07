@@ -113,13 +113,44 @@ export function GameScreen() {
         key = accentMap[key] || key;
       }
 
-      // Build combo string for display
+      // Build combo string for display - show physical key, not produced character
       const modifiers = [];
       if (e.ctrlKey) modifiers.push("Ctrl");
       if (e.altKey) modifiers.push("Option");
       if (e.shiftKey) modifiers.push("Shift");
       if (e.metaKey) modifiers.push("Cmd");
-      const combo = [...modifiers, key].join(" + ");
+
+      // Get physical key from code (e.g., "Digit4" -> "4", "KeyA" -> "a")
+      let physicalKey = e.code;
+      if (e.code.startsWith("Digit")) {
+        physicalKey = e.code.replace("Digit", "");
+      } else if (e.code.startsWith("Key")) {
+        physicalKey = e.code.replace("Key", "").toLowerCase();
+      } else if (e.code === "Comma") {
+        physicalKey = ",";
+      } else if (e.code === "Period") {
+        physicalKey = ".";
+      } else if (e.code === "Slash") {
+        physicalKey = "/";
+      } else if (e.code === "Backslash") {
+        physicalKey = ","; // On Turkish Mac, this is the comma key position
+      } else if (e.code === "BracketLeft") {
+        physicalKey = "ğ";
+      } else if (e.code === "BracketRight") {
+        physicalKey = "ü";
+      } else if (e.code === "Semicolon") {
+        physicalKey = "ş";
+      } else if (e.code === "Quote") {
+        physicalKey = "i";
+      } else if (e.code === "Minus") {
+        physicalKey = "-";
+      } else if (e.code === "Equal") {
+        physicalKey = "*";
+      } else if (e.code === "IntlBackslash") {
+        physicalKey = "<";
+      }
+
+      const combo = [...modifiers, physicalKey].join(" + ");
       setLastKeyCombo(combo);
       setLastPressedKey(key);
 
@@ -279,12 +310,12 @@ export function GameScreen() {
             </div>
 
             {/* Key Input Area */}
-            <div className="space-y-4">
-              <p className="text-[#888] text-sm uppercase tracking-wide">
+            <div className="space-y-6">
+              <p className="text-[#888] text-sm uppercase tracking-wide text-center">
                 Tuş Kombinasyonu
               </p>
 
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center justify-center gap-4 flex-wrap py-8">
                 {(() => {
                   // Special characters that need modifier keys displayed
                   // macOS Turkish-QWERTY-PC keyboard layout (from user's keyboard photo)
@@ -300,7 +331,7 @@ export function GameScreen() {
                     "\\": ["⌥", "7"],
                     "|": ["⌥", "⇧", "7"],
                     "~": ["⌥", "n"],
-                    "`": ["⌥", "<"],
+                    "`": ["⌥", ","],
                     // Shift + number combinations (from keyboard photo)
                     "!": ["⇧", "1"],
                     "'": ["⇧", "2"],
@@ -379,38 +410,39 @@ export function GameScreen() {
                       status === "playing";
 
                     return (
-                      <div key={groupIndex} className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
+                      <div key={groupIndex} className="flex items-center gap-4">
+                        <div className="flex items-center gap-6">
                           {group.keys.map((k, kIndex) => {
                             const displaySymbol = getKeySymbol(k);
-                            const isModifier = ["⌥", "⇧", "⌃", "⌘"].includes(k);
 
                             return (
                               <div
                                 key={kIndex}
-                                className="flex items-center gap-1"
+                                className="flex items-center gap-6"
                               >
                                 <kbd
+                                  style={{
+                                    transform: isKeyPressed
+                                      ? "scale(1.3)"
+                                      : "scale(1)",
+                                    transition:
+                                      "transform 0.3s ease-out, background 0.3s ease-out, border-color 0.3s ease-out",
+                                  }}
                                   className={`
-                                    px-3 h-11 flex items-center justify-center
-                                    rounded-lg font-sans text-base font-medium
-                                    shadow-[0_2px_0_0_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.1)]
-                                    transition-all duration-150
-                                    ${
-                                      isModifier
-                                        ? "min-w-[40px]"
-                                        : "min-w-[36px]"
-                                    }
+                                    px-5 h-14 flex items-center justify-center
+                                    rounded-xl font-sans text-xl font-medium
+                                    shadow-[0_4px_0_0_rgba(0,0,0,0.5)]
+                                    min-w-[50px]
                                     ${
                                       isKeyPressed
-                                        ? "bg-gradient-to-b from-green-500 to-green-600 border border-green-400 text-white shadow-[0_2px_0_0_#166534,inset_0_1px_0_0_rgba(255,255,255,0.2)]"
+                                        ? "bg-gradient-to-b from-green-400 to-green-500 border-2 border-green-300 text-white"
                                         : isCurrentKey
-                                        ? "bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] border border-[#555] text-white"
-                                        : "bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] border border-[#333] text-[#888]"
+                                        ? "bg-gradient-to-b from-[#3a3a3a] to-[#2a2a2a] border-2 border-[#555] text-white"
+                                        : "bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] border-2 border-[#333] text-[#666]"
                                     }
                                     ${
                                       status === "error" && !isKeyPressed
-                                        ? "bg-gradient-to-b from-red-600 to-red-700 border-red-500 text-white"
+                                        ? "bg-gradient-to-b from-red-500 to-red-600 border-red-400 text-white"
                                         : ""
                                     }
                                   `}
@@ -418,14 +450,14 @@ export function GameScreen() {
                                   {displaySymbol}
                                 </kbd>
                                 {kIndex < group.keys.length - 1 && (
-                                  <span className="text-[#444] text-sm">+</span>
+                                  <span className="text-[#444] text-xl">+</span>
                                 )}
                               </div>
                             );
                           })}
                         </div>
                         {groupIndex < allDisplayKeys.length - 1 && (
-                          <span className="text-[#555] text-lg font-light mx-1">
+                          <span className="text-[#555] text-2xl font-light mx-4">
                             →
                           </span>
                         )}
@@ -445,9 +477,6 @@ export function GameScreen() {
                     <span className="text-green-400 text-lg">
                       "{lastPressedKey}"
                     </span>
-                  </p>
-                  <p className="text-xs text-[#555] mt-1">
-                    Klavyende hangi tuşlar hangi karakteri üretiyor öğren!
                   </p>
                 </div>
               )}
@@ -488,31 +517,6 @@ export function GameScreen() {
               </span>
             </div>
           </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mt-12">
-          <div className="flex gap-1">
-            {vimLevels.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goToLevel(i)}
-                className={`
-                  h-1.5 flex-1 rounded-full transition-colors
-                  ${
-                    i < currentLevel
-                      ? "bg-green-500"
-                      : i === currentLevel
-                      ? "bg-white"
-                      : "bg-[#333]"
-                  }
-                `}
-              />
-            ))}
-          </div>
-          <p className="text-center text-[#666] text-sm mt-4">
-            {Math.round((currentLevel / totalLevels) * 100)}% tamamlandı
-          </p>
         </div>
       </main>
     </div>
