@@ -252,7 +252,7 @@ export function GameScreen() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8">
           {/* Left Side - Instructions */}
           <div className="space-y-6">
             {/* Category Filter */}
