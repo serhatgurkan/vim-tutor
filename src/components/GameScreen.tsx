@@ -214,11 +214,6 @@ export function GameScreen() {
   const categories = [...new Set(vimLevels.map((l) => l.category))];
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  const filteredLevels =
-    selectedCategory === "all"
-      ? vimLevels
-      : vimLevels.filter((l) => l.category === selectedCategory);
-
   // Category labels in Turkish
   const categoryLabels: Record<string, string> = {
     all: "Tümü",
